@@ -48,19 +48,19 @@ var testPoly;
 		var dropoff = document.getElementById("dropoff").value; // query string
 
 		if (pickup != ''){
-			search(map, pickup);
+			search_pickup(map, pickup);
 		}
 		if (dropoff != ''){
-			search(map, dropoff);
+			search_dropoff(map, dropoff);
 		}
-
 
 	}
 
+	//load geoprocessing platform on pageload
 	google.maps.event.addDomListener(window, "load", initialize);
 
-
-	function search(map, place_reference) {
+	//search functions to process query string - retrieves place objects from API
+	function search_pickup(map, place_reference) {
 		var eugene = new google.maps.LatLng(44.047833, -123.089757);
 
 		var request = {
@@ -74,21 +74,22 @@ var testPoly;
 
 	}
 
-	// function search_dropoff(map, place_reference) {
-	// 	var eugene = new google.maps.LatLng(44.047833, -123.089757);
+	function search_dropoff(map, place_reference) {
+		var eugene = new google.maps.LatLng(44.047833, -123.089757);
 
-	// 	var request = {
-	// 		location: eugene,
-	// 		radius: "4047",
-	// 		query: place_reference
-	// 	}
+		var request = {
+			location: eugene,
+			radius: "4047",
+			query: place_reference
+		}
 
-	// 	var service = new google.maps.places.PlacesService(map);
-	// 	service.textSearch(request, callback_dropoff);
+		var service = new google.maps.places.PlacesService(map);
+		service.textSearch(request, callback_dropoff);
 
-	// }
+	}
 
-//****
+
+//**** Inspired by Google Developer's 8, April 2016, Address Form Example
 	function geolocate() {
 		console.log('geolocation working');
 		if (navigator.geolocation) {
@@ -107,54 +108,49 @@ var testPoly;
 	}
 //****
 
-
-
+	//call back functions geocode place & check if it's in bounds via point in polygon operation
 	function callback_pickup(resultLocations, status) {
 		if (status == google.maps.places.PlacesServiceStatus.OK){
 			if (resultLocations.length > 1) {
 				document.alert("please choose a more specific location")
 			} else {
 				console.log(resultLocations[0]);
+				var place = resultLocations[0];
+				var point = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+				initialize();
+				if (google.maps.geometry.poly.containsLocation(point, testPoly)) {
+					console.log("locaiton in bounds") // turn text box green
+					document.getElementById("pickup").style.backgroundColor = "#f0fbf0"
+				} else {
+					console.log("Error: Location out of Bounds") // turn text box red
+					document.getElementById("pickup").style.backgroundColor = "#f4d2d2"
+				}
 			}
 		}
 	}
 
-	// function callback_dropoff(resultLocations, status) {
-	// //clear elements in dropdown
-	// 	$("#placeResults").empty();
-	// 	if (status == google.maps.places.PlacesServiceStatus.OK){
-	// 		if (document.getElementById("dropoff").value != "") {
-	// 			for (var i = 0; i < resultLocations.length; i++){
-	// 				var place = resultLocations[i];
-	// 				console.log("dropoff", place);
-	// 				var select = document.getElementById("placeResults");
-	// 				var option = document.createElement("option");
-	// 				option.value = place.geometry.location;
-	// 				option.text = place.formatted_address;
-	// 				select.appendChild(option); // load options into dropdown
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	//point-in-polygon
-	function validateLocation_pickup() {
-		var location = document.getElementById("pickup").value;
-		location = location.split(" ");
-		latitude = parseFloat(location[0].substring(1, location[0].length));
-		longitude = parseFloat(location[1]);
-		point = new google.maps.LatLng(latitude, longitude);
-		initialize();
-		if (google.maps.geometry.poly.containsLocation(point, testPoly)) {
-			console.log("locaiton in bounds") // turn text box green
-		} else {
-			console.log("Error: Location out of Bounds") // turn text box red
+	function callback_dropoff(resultLocations, status) {
+		if (status == google.maps.places.PlacesServiceStatus.OK){
+			if (resultLocations.length > 1) {
+				alert("please choose a more specific location")
+			} else {
+				console.log(resultLocations[0]);
+				var place = resultLocations[0];
+				var point = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+				initialize();
+				if (google.maps.geometry.poly.containsLocation(point, testPoly)) {
+					console.log("locaiton in bounds") // turn text box green
+					document.getElementById("dropoff").style.backgroundColor = "#f0fbf0"
+				} else {
+					console.log("Error: Location out of Bounds") // turn text box red
+					document.getElementById("dropoff").style.backgroundColor = "#f4d2d2"
+				}
+			}
 		}
 	}
 
+// allow user to verify their location to be in bounds
 $("#verify").click(function() {
-	var pickup = document.getElementById("pickup").value;
-	var dropoff = document.getElementById("dropoff").value;
 	initialize();
 });
 
